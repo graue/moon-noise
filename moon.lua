@@ -74,6 +74,13 @@ table.insert(myFx, units.effects.filter.new({
     q = logRandomBetween(0.5, 50),
     filtType = randomFrom({'Lowpass','Highpass','Bandpass','Notch'})
 }))
+table.insert(myFx, units.effects.adsr.new({
+    decay = randomBetween(100, 1000),
+    attack = logRandomBetween(5, 200),
+    sustainLen = randomBetween(2000, 9000),
+    release = logRandomBetween(2000, 9000),
+    sustainLevel = randomBetween(-20, -5)
+}))
 table.insert(myFx, units.effects.power.new({
     exponent = 2 - logRandomBetween(1, 1.5)
 }))
