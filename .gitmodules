@@ -1,0 +1,3 @@
+[submodule "luasynth"]
+	path = luasynth
+	url = https://github.com/graue/luasynth
