@@ -62,55 +62,77 @@ end
 
 math.randomseed(os.time())
 
-local myGen = units.gens.osc.new({
-    oscType = randomFrom({'Sine','Triangle','Square','Saw Up'}),
-    gain = randomBetween(-14, -4),
-    freq = logRandomBetween(200, 10000)
-})
+function createChain()
+    local myGen = units.gens.osc.new({
+        oscType = randomFrom({'Sine','Triangle','Square','Saw Up'}),
+        gain = randomBetween(-24, -14),
+        freq = logRandomBetween(200, 10000)
+    })
 
-local myFx = {}
-table.insert(myFx, units.effects.filter.new({
-    center = logRandomBetween(200, 10000),
-    q = logRandomBetween(0.5, 50),
-    filtType = randomFrom({'Lowpass','Highpass','Bandpass','Notch'})
-}))
-table.insert(myFx, units.effects.adsr.new({
-    decay = randomBetween(100, 1000),
-    attack = logRandomBetween(5, 200),
-    sustainLen = randomBetween(2000, 9000),
-    release = logRandomBetween(2000, 9000),
-    sustainLevel = randomBetween(-20, -5)
-}))
-table.insert(myFx, units.effects.power.new({
-    exponent = 2 - logRandomBetween(1, 1.5)
-}))
-table.insert(myFx, units.effects.filter.new({
-    center = logRandomBetween(200, 10000),
-    q = logRandomBetween(0.5, 50),
-    filtType = randomFrom({'Lowpass','Highpass','Bandpass','Notch'})
-}))
-table.insert(myFx, units.effects.pan.new({
-    angle = randomBetween(-22, 22.05)
-}))
-table.insert(myFx, units.effects.delay.new({
-    len = logRandomBetween(20, 10000),
-    feedback = logRandomBetween(20, 80),
-    wetOut = logRandomBetween(50, 99)
-}))
+    local myFx = {}
+    table.insert(myFx, units.effects.filter.new({
+        center = logRandomBetween(200, 10000),
+        q = logRandomBetween(0.5, 50),
+        filtType = randomFrom({'Lowpass','Highpass','Bandpass','Notch'})
+    }))
+    table.insert(myFx, units.effects.adsr.new({
+        decay = randomBetween(100, 1000),
+        attack = logRandomBetween(5, 200),
+        sustainLen = randomBetween(2000, 9000),
+        release = logRandomBetween(2000, 9000),
+        sustainLevel = randomBetween(-20, -5)
+    }))
+    table.insert(myFx, units.effects.power.new({
+        exponent = 2 - logRandomBetween(1, 1.5)
+    }))
+    table.insert(myFx, units.effects.filter.new({
+        center = logRandomBetween(200, 10000),
+        q = logRandomBetween(0.5, 50),
+        filtType = randomFrom({'Lowpass','Highpass','Bandpass','Notch'})
+    }))
+    table.insert(myFx, units.effects.pan.new({
+        angle = randomBetween(-22, 22.05)
+    }))
+    table.insert(myFx, units.effects.delay.new({
+        len = logRandomBetween(20, 10000),
+        feedback = logRandomBetween(20, 80),
+        wetOut = logRandomBetween(50, 99)
+    }))
+    io.stderr:write("New chain created. " .. myGen.oscType .. "\n")
+    return {gen = myGen, fx = myFx, sampsLeft = 30 * rate}
+end
 
 local bufferSize = 1024
-local lengthInSecs = 30
+local lengthInSecs = 120
 local lengthInBuffers = math.floor(lengthInSecs * rate / bufferSize)
+local chains = {createChain()}
+local timeToNextChain = math.floor(2 * rate / bufferSize)
 
 for _ = 1, lengthInBuffers do
-    local samps = generateChained(myGen, myFx, bufferSize)
-    if #samps ~= 2*bufferSize then
-        io.stderr:write('Wrong number of samps! '
-                        .. 2*bufferSize .. ' expected, ' .. #samps .. ' found\n')
-        os.exit(1)
+    local samps = generateChained(chains[1].gen, chains[1].fx, bufferSize)
+    for i = 2, #chains do
+        local moreSamps = generateChained(chains[i].gen, chains[i].fx,
+            bufferSize)
+        for j = 1, 2*bufferSize do
+            samps[j] = samps[j] + moreSamps[j]
+        end
     end
     for i = 1, bufferSize do
         -- write stereo sample pair
         writeFloats(samps[2*i-1], samps[2*i])
+    end
+    for i = 1, #chains do
+        chains[i].sampsLeft = chains[i].sampsLeft - bufferSize
+        if chains[i].sampsLeft == 0 then
+            chains[i] = createChain()
+        end
+    end
+    timeToNextChain = timeToNextChain - 1
+    if timeToNextChain <= 0 then
+        table.insert(chains, createChain())
+        timeToNextChain = math.floor((0.5*(#chains-1) + randomBetween(3, 6))
+                                     * rate / bufferSize)
+        io.stderr:write('Next chain in ' ..
+                        (timeToNextChain * bufferSize / rate) .. "\n")
     end
 end
