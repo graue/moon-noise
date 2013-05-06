@@ -66,13 +66,13 @@ function createChain()
     local myGen = units.gens.osc.new({
         oscType = randomFrom({'Sine','Triangle','Square','Saw Up'}),
         gain = randomBetween(-24, -14),
-        freq = logRandomBetween(200, 10000)
+        freq = logRandomBetween(200, 1500)
     })
 
     local myFx = {}
     table.insert(myFx, units.effects.filter.new({
         center = logRandomBetween(200, 10000),
-        q = logRandomBetween(0.5, 50),
+        q = logRandomBetween(0.5, 20),
         filtType = randomFrom({'Lowpass','Highpass','Bandpass','Notch'})
     }))
     table.insert(myFx, units.effects.adsr.new({
@@ -87,7 +87,7 @@ function createChain()
     }))
     table.insert(myFx, units.effects.filter.new({
         center = logRandomBetween(200, 10000),
-        q = logRandomBetween(0.5, 50),
+        q = logRandomBetween(0.5, 20),
         filtType = randomFrom({'Lowpass','Highpass','Bandpass','Notch'})
     }))
     table.insert(myFx, units.effects.pan.new({
@@ -96,7 +96,7 @@ function createChain()
     table.insert(myFx, units.effects.delay.new({
         len = logRandomBetween(20, 10000),
         feedback = logRandomBetween(20, 80),
-        wetOut = logRandomBetween(50, 99)
+        wetOut = randomBetween(50, 99)
     }))
     io.stderr:write("New chain created. " .. myGen.oscType .. "\n")
     return {gen = myGen, fx = myFx, sampsLeft = 30 * rate}
