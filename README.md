@@ -44,3 +44,9 @@ messages, like:
 
 I don't know if there's a command like `aplay` for OS X or Windows.
 I'd be happy to consider a patch for more convenient listening.
+
+## Colophon
+
+I made this at [Hacker School](https://www.hackerschool.com/), which was an
+awesome experience. If you're interested in leveling up as a programmer,
+you should [apply](https://www.hackerschool.com/apply).
