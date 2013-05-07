@@ -7,12 +7,33 @@ local ffi = require "ffi"
 ffi.cdef[[
 typedef struct { float f[2]; } sample_pair;
 size_t fwrite(const void *ptr, size_t size, size_t nmemb, void *stream);
-int isatty(int fd);
 ]]
 
-if ffi.C.isatty(1) ~= 0 then
+local isatty
+local setBinaryMode
+if jit.os == 'Windows' then
+    -- On Windows, isatty has an underscore. And we need to set stdout to
+    -- binary mode.
+    ffi.cdef[[
+        int _isatty(int fd);
+        int _setmode(int fd, int mode);
+    ]]
+    isatty = ffi.C._isatty
+    setBinaryMode = function()
+        ffi.C._setmode(1, 32768)  -- 1 is stdout, 32768 is O_BINARY
+    end
+else
+    -- On other (Unix-based) OSes, we have isatty as normal, and no need to
+    -- worry about binary mode.
+    ffi.cdef("int isatty(int fd);")
+    isatty = ffi.C.isatty
+    setBinaryMode = function() end
+end
+
+if isatty(1) ~= 0 then
     error("Stdout should not be a terminal. Try redirecting to a file")
 end
+setBinaryMode()
 
 local samplePair = ffi.new("sample_pair[?]", 1)
 

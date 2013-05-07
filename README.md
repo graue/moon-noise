@@ -30,27 +30,26 @@ above, so you can listen offline. Tell the program it's a 32-bit float,
 2-channel, raw audio file with a sampling rate of 44100 Hz.
 
 A more fun way to listen is to pipe the audio into a program that plays it.
-My usual approach is this, but it requires `fmt` from my
-[Synth package](https://github.com/graue/synth), and only works on Linux:
+If you install [SoX](http://sox.sourceforge.net/), a cross-platform audio
+tool, you can do it like this:
+
+    luajit moon.lua | sox -tf32 -c2 -r44100 -q - -d
+
+SoX may print out a couple warning messages, but this is tested to work on
+both Linux and Windows, and almost certainly works on OS X too (please file
+an issue if it doesn't!).
+
+An alternative method using my `fmt` program
+[from here](https://github.com/graue/synth) is a bit nicer, but only
+works on Linux:
 
     luajit moon.lua | fmt -16 | aplay -qfcd
-
-Here, `fmt` converts 32-bit float samples to 16-bit integer samples, and
-`aplay` plays raw 16-bit integer samples (`-q` means don't print status
-messages on the console, `-fcd` means expect raw CD-audio format, `-qfcd`
-combines these two options).
-
-Another solution which may work for OS X and Windows users, as well as Linux,
-is to use [SoX](http://sox.sourceforge.net/), which is cross-platform.
-SoX comes with a `play` command you can use like this:
-
-    luajit moon.lua | play -tf32 -c2 -r44100 -q -
-
-It's more to type, but it seems to do the trick. If you try this on OS X or
-Windows, please let me know whether it works or not! I'll update the readme.
 
 ## Colophon
 
 I made this at [Hacker School](https://www.hackerschool.com/), which was an
 awesome experience. If you're interested in leveling up as a programmer,
 you should [apply](https://www.hackerschool.com/apply).
+
+Thanks to [@Adhesion](https://github.com/Adhesion) for testing this on
+Windows.
