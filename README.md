@@ -16,34 +16,38 @@ run:
 
 to fetch Luasynth.
 
-Now there's a catch. The way this works is it outputs raw samples in 32-bit
-float format, which is handy for modifying further with the commands in, e.g.,
-Luasynth, but may not be easy to actually listen to. Some audio programs may
-be able to open files in raw, 32-bit float format, so you can try saving
-output to a file, say `audio.f32`:
+Now, Moon Noise has no code for actually playing the audio. All it does is
+*compute* the audio and output numbers (32-bit floating point numbers, to be
+precise) that represent that audio. To save the audio to a file, which is the
+simplest way to use Moon Noise, you can do this:
 
     luajit moon.lua >audio.f32
 
-But what I do, on Linux, is this:
+## Listening to the output
+
+Some audio programs will let you open the `audio.f32` file you just created
+above, so you can listen offline. Tell the program it's a 32-bit float,
+2-channel, raw audio file with a sampling rate of 44100 Hz.
+
+A more fun way to listen is to pipe the audio into a program that plays it.
+My usual approach is this, but it requires `fmt` from my
+[Synth package](https://github.com/graue/synth), and only works on Linux:
 
     luajit moon.lua | fmt -16 | aplay -qfcd
 
-where `fmt` is from my [Synth kit](https://github.com/graue/synth), and
-`aplay` is a command that comes with Ubuntu (and possibly other
-distributions). If you're on Linux, this lets you listen in realtime (ish)
-to the sound it's generating, while also seeing the corresponding status
-messages, like:
+Here, `fmt` converts 32-bit float samples to 16-bit integer samples, and
+`aplay` plays raw 16-bit integer samples (`-q` means don't print status
+messages on the console, `-fcd` means expect raw CD-audio format, `-qfcd`
+combines these two options).
 
-    New chain created. Square
-    New chain created. Square
-    Next chain in 3.6455328798186
-    New chain created. Sine
-    Next chain in 4.6904308390023
-    New chain created. Saw Up
-    Next chain in 6.7570068027211
+Another solution which may work for OS X and Windows users, as well as Linux,
+is to use [SoX](http://sox.sourceforge.net/), which is cross-platform.
+SoX comes with a `play` command you can use like this:
 
-I don't know if there's a command like `aplay` for OS X or Windows.
-I'd be happy to consider a patch for more convenient listening.
+    luajit moon.lua | play -tf32 -c2 -r44100 -q -
+
+It's more to type, but it seems to do the trick. If you try this on OS X or
+Windows, please let me know whether it works or not! I'll update the readme.
 
 ## Colophon
 
