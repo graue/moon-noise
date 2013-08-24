@@ -124,10 +124,15 @@ function createChain()
 end
 
 local bufferSize = 1024
-local lengthInSecs = 120
+local lengthInSecs = 4
 local lengthInBuffers = math.floor(lengthInSecs * rate / bufferSize)
 local chains = {createChain()}
 local timeToNextChain = math.floor(2 * rate / bufferSize)
+
+local profiler = require 'lulip'
+local p = profiler:new()
+p:maxrows(25)
+p:start()
 
 for _ = 1, lengthInBuffers do
     local samps = generateChained(chains[1].gen, chains[1].fx, bufferSize)
@@ -157,3 +162,6 @@ for _ = 1, lengthInBuffers do
                         (timeToNextChain * bufferSize / rate) .. "\n")
     end
 end
+
+p:stop()
+p:dump("output.html")
